@@ -1,59 +1,67 @@
-#!/bin/bash
+#!/bin/sh
 
 # Guardar la ruta del archivo de configuración de Nano en una variable
 NANO_CONF="$HOME/.nanorc"
 
+# Verificar si el directorio home existe y es accesible
+if [ ! -d "$HOME" ]; then
+    echo "Error: El directorio home no existe o no es accesible."
+    exit 1
+fi
+
 # Crear un archivo de configuración de Nano si no existe
 if [ ! -f "$NANO_CONF" ]; then
-    touch "$NANO_CONF"
+    touch "$NANO_CONF" || { echo "Error: No se pudo crear el archivo de configuración."; exit 1; }
 fi
 
 # Crear una copia de seguridad del archivo de configuración original, si no existe
 if [ ! -f "${NANO_CONF}.bak" ]; then
-    cp "$NANO_CONF" "${NANO_CONF}.bak"
+    cp "$NANO_CONF" "${NANO_CONF}.bak" || { echo "Error: No se pudo crear la copia de seguridad."; exit 1; }
 fi
 
 # Función para restaurar la configuración original de Nano
 restaurar_conf_original() {
-    cp "${NANO_CONF}.bak" "$NANO_CONF"
+    cp "${NANO_CONF}.bak" "$NANO_CONF" || { echo "Error: No se pudo restaurar la configuración original."; exit 1; }
     echo "Configuración de Nano restaurada a la original."
 }
 
 # Opción para restaurar la configuración original de Nano
-if [ "$1" == "--restaurar" ]; then
+if [ "$1" = "--restaurar" ]; then
     restaurar_conf_original
     exit 0
 fi
 
-# Habilitar el soporte para el mouse
-echo "set mouse" >> "$NANO_CONF"
+# Función para agregar una línea si no existe
+agregar_linea() {
+    grep -qF -- "$1" "$NANO_CONF" || echo "$1" >> "$NANO_CONF"
+}
 
-# Mostrar las líneas del archivo
-echo "set linenumbers" >> "$NANO_CONF"
+# Agregar configuraciones
+agregar_linea "set mouse"
+agregar_linea "set linenumbers"
 
 # Configurar colores para distintos lenguajes de programación
-echo "syntax \"python\" \"\\.py$\"" >> "$NANO_CONF"
-echo "color green \"import|from|def|class|try|except|raise\"" >> "$NANO_CONF"
-echo "color blue \"if|elif|else|while|for|in|return|with\"" >> "$NANO_CONF"
-echo "color red \"\\\"(\\\\.|[^\\\\\"])*\\\"|'(\\\\.|[^\\\\'])*'\"" >> "$NANO_CONF"
-echo "color magenta \"#.*$\"" >> "$NANO_CONF"
+cat << EOF >> "$NANO_CONF"
+syntax "python" "\\.py$"
+color green "import|from|def|class|try|except|raise"
+color blue "if|elif|else|while|for|in|return|with"
+color red "\"(\\\\.|[^\\\\\"])*\"|'(\\\\.|[^\\\\'])*'"
+color magenta "#.*$"
 
-echo "syntax \"javascript\" \"\\.js$\"" >> "$NANO_CONF"
-echo "color green \"import|export|function|class|try|catch|throw\"" >> "$NANO_CONF"
-echo "color blue \"if|else|while|for|in|return|switch|case|default\"" >> "$NANO_CONF"
-echo "color red \"\\\"(\\\\.|[^\\\\\"])*\\\"|'(\\\\.|[^\\\\'])*'|/\\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/\"" >> "$NANO_CONF"
-echo "color magenta \"//.*$\"" >> "$NANO_CONF"
+syntax "javascript" "\\.js$"
+color green "import|export|function|class|try|catch|throw"
+color blue "if|else|while|for|in|return|switch|case|default"
+color red "\"(\\\\.|[^\\\\\"])*\"|'(\\\\.|[^\\\\'])*'|/\\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/"
+color magenta "//.*$"
+EOF
 
 echo ""
-echo "  ____                       _       _"
-echo " |  _ \ __ _ _ __  _ __   __| |_ __ (_)_ __  _   ___  __"
-echo " | |_) / _\` | '_ \| '_ \ / _\` | '_ \| | '_ \| | | \ \/ /"
-echo " |  __/ (_| | | | | | | | (_| | | | | | | | | |_| |>  <"
-echo " |_|   \__,_|_| |_|_| |_|\__,_|_| |_|_|_| |_|\__,_/_/\_\\"
+echo "  ____              __  ______  _____ "
+echo " |  _ \ __ _ _ __   \ \/ / __ \/ ____|"
+echo " | |_) / _\` | '_ \   \  / |  | \____ \\"
+echo " |  __/ (_| | | | |  /  \ |__| |____) |"
+echo " |_|   \__,_|_| |_| /_/\_\____/|_____/ "
 echo ""
 echo "Configuración de Nano actualizada."
 echo "Creado por Panxos"
-echo "Cualquier duda o consulta: faravena@soporteinfo.net"
 echo "https://github.com/panxos"
-
-
